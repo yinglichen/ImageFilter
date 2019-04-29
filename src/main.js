@@ -4,8 +4,8 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import '@/assets/style/common.css'
-import myFilter from '@/components/Filters'
-Vue.use(myFilter)
+import filters from '@/components/index.js'
+Vue.use(filters)
 import ElementUI from 'element-ui'
 import '../node_modules/element-ui/lib/theme-chalk/index.css'
 Vue.use(ElementUI)

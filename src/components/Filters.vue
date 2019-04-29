@@ -1,7 +1,10 @@
 <template>
     <div id='filterPage'>
-        <div id='filter' v-myFilter >
+        <div id='filter' v-myfilter >
              <div id='originalPic'></div>
+             <div id='cutPart'>
+
+             </div>
              <div id='select_filter'>
                 <ul style="display:flex;">
                     <li id='originPhoto'>
@@ -45,12 +48,14 @@
 <script>
 import png from '@/assets/images/imgDemo.jpeg'
 import { setTimeout } from 'timers'; 
+import { endianness } from 'os';
+import { constants } from 'fs';
 export default {
     install(Vue){
-        Vue.directive('myFilter',{
-            inserted:function(el){
-                start(el)
-            }
+        Vue.directive('myfilter',{
+            // inserted:function(el){
+            //      start(el)
+            // }
         })},
         data(){
             return{
@@ -61,296 +66,451 @@ export default {
               resultData:null,
               flag:false,
               reader:null,
+              ctx:null,
+              ctx1:null,
+              ctx2:null,
+              ctx3:null,
+              ctx4:null,
+              ctx5:null,
+              ctx6:null,
+              ctx7:null,
+              ctx8:null,
+              ctx9:null,
+              ctx10:null,
+              ctx11:null,
+              waveImage:null,
+              imgSrc:null,
+              canvasHeight:null,
+              canvasWidth:null, 
+              canvas1Width:null,
+              canvas1Height:null,
+              canvas2Width:null,
+              canvas2Height:null,
+    canvas3Height:null,
+    canvas3Width:null,
+    canvas4Height:null,
+    canvas4Width:null,
+    canvas5Height:null,
+    canvas5Width:null,
+    canvas6Height:null,
+    canvas6Width:null,
+    canvas7Height:null,
+    canvas7Width:null,
+    canvas8Height:null,
+    canvas8Width:null,
+    canvas9Height:null,
+    canvas9Width:null,
+    canvas10Height:null,
+    canvas10Width:null,
+    canvas11Height:null,
+    canvas11Width:null,
+    needAnimate:false,
+    flag:false,
+    imgData:null,
+    imgData1:null,
+    imgData2:null,
+    imgData3:null,
+    imgData4:null,
+    imgData5:null,
+    imgData6:null,
+    imgData7:null,
+    imgData8:null,
+    imgData9:null,
+    data:null,
+    originalPic:null,
+    filter1:null,
+    filter2:null,
+    filter3:null,
+    filter4:null,
+    filter5:null,
+    filter6:null,
+    filter7:null,
+    filter8:null,
+    filter9:null,
+    filter10:null,
+    selectedFilter:null,
+    photo:null,
+    canvas1:null,
+    dataUrl:'',
+    r:0, //压缩比
+    wtemp:0, 
+    htemp:0, 
+    img_width:0,
+    img_height:0,
+    // 裁切
+    x:0, //点击canvas x 鼠标地址
+    y:0, //点击canvas y 鼠标地址
+    xV:0, //鼠标移动 x距离
+    yV:0, //鼠标移动 y距离
+    nX:0, //原始坐标点 图像x
+    nY:0, //原始坐标点 图像y
+    scale:1.5, //放大比例 
+    deg:0, //旋转角度
             } 
+    },
+    props:{
+        img:String,
+         clipperImgWidth:{
+             type:Number,
+             default:500
+         },
+         clipperImgHeight:{
+             type:Number,
+             default:200
+         }
     },
 
     methods:{
-
-     
-
-    }
-     
-}
- 
-
- 
- 
-
-var ctx,ctx1,ctx2,ctx3,ctx4,ctx5,ctx6,ctx7,ctx8,ctx9,ctx10,ctx11;
-var waveImage,imgSrc;   
-var canvasHeight,canvasWidth, canvas1Width,canvas1Height,canvas2Width,canvas2Height,
-    canvas3Height,canvas3Width,canvas4Height,canvas4Width,canvas5Height,canvas5Width,
-    canvas6Height,canvas6Width,canvas7Height,canvas7Width,canvas8Height,canvas8Width,
-    canvas9Height,canvas9Width,canvas10Height,canvas10Width,canvas11Height,canvas11Width
-    ;
-var needAnimate=false,flag=false;
-var imgData,imgData1,imgData2,imgData3,imgData4,imgData5,imgData6,imgData7,imgData8,imgData9;
-var data;
-var originalPic,filter1,filter2,filter3,filter4,filter5,filter6,filter7,filter8,filter9,filter10;
-var selectedFilter=null;
-var photo,canvas1;
-
-var ul=document.querySelector("ul");
-var list=document.getElementsByTagName('li');
-function foo(){
-    for(let i=0,len=list.length;i<len;i++){
-        list[i].onclick=function(){
-           selectedFilter=this.id
-           filter(selectedFilter)
-        }
-    }
-}
-
-
-function init (callback, filter) {
-    photo=png
-    originalPic=document.getElementById('originalPic')
-    filter1=document.getElementById('filter1')
-    filter2=document.getElementById('filter2')
-    filter3=document.getElementById('filter3')
-    filter4=document.getElementById('filter4')
-    filter5=document.getElementById('filter5')
-    filter6=document.getElementById('filter6')
-    filter7=document.getElementById('filter7')
-    filter8=document.getElementById('filter8')
-    filter9=document.getElementById('filter9')
-    filter10=document.getElementById('filter10')
+    filter(){ 
+     this.changePic()      
+     this.bigOriginPhote() // 大图
+     this.originPhoto( )//原图
+     this.blackWhite( )//黑白滤镜              
+     this.reverse( )//反向滤镜          
+     this.frozen( )// 冰冻滤镜  
+     this.comic( )// 连环画滤镜 
+     this.casting( ) //熔铸滤镜 
+     this.brown( )  // 褐色滤镜  
+     this.old( )  // 怀旧滤镜     
+     this.blurH( )//高斯模糊滤镜      
+     this.mosaic( )//马赛克滤镜     
+     this.emboss( ) //浮雕滤镜
+    },
+    init (callback, filter) {
+    this.photo=png
+    this.originalPic=document.getElementById('originalPic')
+    this.filter1=document.getElementById('filter1')
+    this.filter2=document.getElementById('filter2')
+    this.filter3=document.getElementById('filter3')
+    this.filter4=document.getElementById('filter4')
+    this.filter5=document.getElementById('filter5')
+    this.filter6=document.getElementById('filter6')
+    this.filter7=document.getElementById('filter7')
+    this.filter8=document.getElementById('filter8')
+    this.filter9=document.getElementById('filter9')
+    this.filter10=document.getElementById('filter10')
     var filter11=document.getElementById('originPhoto')
 
 // 大图
-        canvas1= document.createElement('canvas');
-        if (!canvas1.getContext) return;
-        ctx = canvas1.getContext('2d');
-       // canvasWidth = filter.offsetWidth;
-        canvasHeight=400;
-        canvasWidth=600;
-        //canvasHeight = filter1.offsetHeight;
-        canvas1.setAttribute('width', canvasWidth);
-        canvas1.setAttribute('height', canvasHeight);
-        originalPic.appendChild(canvas1);
+        this.canvas1= document.createElement('canvas');
+        if (!this.canvas1.getContext) return;
+        this.ctx = this.canvas1.getContext('2d');  
+        this.canvasHeight=400;
+        this.canvasWidth=600; 
+        this.canvas1.setAttribute('width', this.canvasWidth);
+        this.canvas1.setAttribute('height', this.canvasHeight);
+        this.originalPic.appendChild(this.canvas1);
 // 原图
        var canvasOrigin=document.createElement('canvas');
-       ctx11=canvasOrigin.getContext('2d');
-       canvas11Width=100;
-       canvas11Height=100;
-       canvasOrigin.setAttribute('width',canvas11Width)
-       canvasOrigin.setAttribute('height',canvas11Height)  
+       this.ctx11=canvasOrigin.getContext('2d');
+       this.canvas11Width=100;
+       this.canvas11Height=100;
+       canvasOrigin.setAttribute('width',this.canvas11Width)
+       canvasOrigin.setAttribute('height',this.canvas11Height)  
        filter11.appendChild(canvasOrigin)      
 
 //滤镜1 - 黑白
         var canvas1=document.createElement('canvas');
-        ctx1=canvas1.getContext('2d');
-        canvas1Width=100;
-        canvas1Height=100;
-        canvas1.setAttribute('width', canvas1Width);
-        canvas1.setAttribute('height', canvas1Height);
-        filter1.appendChild(canvas1);
+        this.ctx1=canvas1.getContext('2d');
+        this.canvas1Width=100;
+        this.canvas1Height=100;
+        canvas1.setAttribute('width', this.canvas1Width);
+        canvas1.setAttribute('height', this.canvas1Height);
+        this.filter1.appendChild(canvas1);
 //滤镜2 - 反向
         var canvas2=document.createElement('canvas');
-        ctx2=canvas2.getContext('2d');
-        canvas2Width=100;
-        canvas2Height=100;
-        canvas2.setAttribute('width', canvas2Width);
-        canvas2.setAttribute('height', canvas2Height);
-        filter2.appendChild(canvas2); 
+        this.ctx2=canvas2.getContext('2d');
+        this.canvas2Width=100;
+        this.canvas2Height=100;
+        canvas2.setAttribute('width', this.canvas2Width);
+        canvas2.setAttribute('height', this.canvas2Height);
+        this.filter2.appendChild(canvas2); 
 //滤镜3 - 冰冻
         var canvas3=document.createElement('canvas');
-        ctx3=canvas3.getContext('2d');
-        canvas3Width=100;
-        canvas3Height=100;
-        canvas3.setAttribute('width',canvas3Width);
-        canvas3.setAttribute('height',canvas3Height);
-        filter3.appendChild(canvas3)        
+        this.ctx3=canvas3.getContext('2d');
+        this.canvas3Width=100;
+        this.canvas3Height=100;
+        canvas3.setAttribute('width',this.canvas3Width);
+        canvas3.setAttribute('height',this.canvas3Height);
+        this.filter3.appendChild(canvas3)        
 //滤镜4 - 连环画
         var canvas4=document.createElement('canvas');
-        ctx4=canvas4.getContext('2d');
-        canvas4Width=100;
-        canvas4Height=100;
-        canvas4.setAttribute('width',canvas4Width);
-        canvas4.setAttribute('height',canvas4Height);
-        filter4.appendChild(canvas4)              
+        this.ctx4=canvas4.getContext('2d');
+        this.canvas4Width=100;
+        this.canvas4Height=100;
+        canvas4.setAttribute('width',this.canvas4Width);
+        canvas4.setAttribute('height',this.canvas4Height);
+        this.filter4.appendChild(canvas4)              
 //滤镜5 - 熔铸   
         var canvas5=document.createElement('canvas');
-        ctx5=canvas5.getContext('2d');
-        canvas5Width=100;
-        canvas5Height=100;
-        canvas5.setAttribute('width',canvas5Width);
-        canvas5.setAttribute('height',canvas5Height);
-        filter5.appendChild(canvas5)  
+        this.ctx5=canvas5.getContext('2d');
+        this.canvas5Width=100;
+        this.canvas5Height=100;
+        canvas5.setAttribute('width',this.canvas5Width);
+        canvas5.setAttribute('height',this.canvas5Height);
+        this.filter5.appendChild(canvas5)  
 //滤镜6 - 褐色
         var canvas6=document.createElement('canvas');
-        ctx6=canvas6.getContext('2d');
-        canvas6Width=100;
-        canvas6Height=100;
-        canvas6.setAttribute('width',canvas6Width);
-        canvas6.setAttribute('height',canvas6Height);
-        filter6.appendChild(canvas6)  
+        this.ctx6=canvas6.getContext('2d');
+        this.canvas6Width=100;
+        this.canvas6Height=100;
+        canvas6.setAttribute('width',this.canvas6Width);
+        canvas6.setAttribute('height',this.canvas6Height);
+        this.filter6.appendChild(canvas6)  
 
 //滤镜7 - 怀旧
         var canvas7=document.createElement('canvas');
-        ctx7=canvas7.getContext('2d');
-        canvas7Width=100;
-        canvas7Height=100;  
-        canvas7.setAttribute('width',canvas7Width);
-        canvas7.setAttribute('height',canvas7Height);
-        filter7.appendChild(canvas7)    
+        this.ctx7=canvas7.getContext('2d');
+        this.canvas7Width=100;
+        this.canvas7Height=100;  
+        canvas7.setAttribute('width',this.canvas7Width);
+        canvas7.setAttribute('height',this.canvas7Height);
+        this.filter7.appendChild(canvas7)    
 //滤镜8 - 高斯模糊
         var canvas8=document.createElement('canvas');
-        ctx8=canvas8.getContext('2d');
-        canvas8Width=100;
-        canvas8Height=100;  
-        canvas8.setAttribute('width',canvas8Width);
-        canvas8.setAttribute('height',canvas8Height);
-        filter8.appendChild(canvas8)  
+        this.ctx8=canvas8.getContext('2d');
+        this.canvas8Width=100;
+        this.canvas8Height=100;  
+        canvas8.setAttribute('width',this.canvas8Width);
+        canvas8.setAttribute('height',this.canvas8Height);
+        this.filter8.appendChild(canvas8)  
 //滤镜9 - 马赛克
         var canvas9=document.createElement('canvas');
-        ctx9=canvas9.getContext('2d');
-        canvas9Height=100;
-        canvas9Width=100;
-        canvas9.setAttribute('width',canvas9Width);
-        canvas9.setAttribute('height',canvas9Height);  
-        filter9.appendChild(canvas9)                         
+        this.ctx9=canvas9.getContext('2d');
+        this.canvas9Height=100;
+        this.canvas9Width=100;
+        canvas9.setAttribute('width',this.canvas9Width);
+        canvas9.setAttribute('height',this.canvas9Height);  
+        this.filter9.appendChild(canvas9)                         
 //滤镜10 - 浮雕
         var canvas10=document.createElement('canvas');
-         ctx10=canvas10.getContext('2d');
-         canvas10Height=100;
-         canvas10Width=100;
-        canvas10.setAttribute('width',canvas10Width)
-        canvas10.setAttribute('height',canvas10Height)
-        filter10.appendChild(canvas10)
-     
-
-
-        waveImage = new Image();
-        waveImage.onload = function () { 
-            waveImage.onload = null;
-            callback(filter);
+         this.ctx10=canvas10.getContext('2d');
+         this.canvas10Height=100;
+         this.canvas10Width=100;
+        canvas10.setAttribute('width',this.canvas10Width)
+        canvas10.setAttribute('height',this.canvas10Height)
+        this.filter10.appendChild(canvas10)
+       this.waveImage = new Image();
+       this. waveImage.onload = ()=>{ 
+            this.waveImage.onload = null;
+            callback(this.filter);
+        }       
+         this.waveImage.src =this.photo; 
+         if(this.dataUrl==''){
+          this.$emit('listenToChildEvent',this.waveImage) 
+         } 
+           
+    }, 
+  foo(list){
+    for(let i=0,len=list.length;i<len;i++){
+        list[i].onclick=()=>{ 
+           this.selectedFilter=list[i].id
+           this.filter(this.selectedFilter)
         }
-        
-         waveImage.src = photo;
-        
-            
     }
-    
-    function filter(){
-             foo()
-         if (!needAnimate) return;
-
-     changePic()      
-     bigOriginPhote() // 大图
-     originPhoto( )//原图
-     blackWhite( )//黑白滤镜              
-     reverse( )//反向滤镜          
-     frozen( )// 冰冻滤镜  
-     comic( )// 连环画滤镜 
-     casting( ) //熔铸滤镜 
-     brown( )  // 褐色滤镜  
-     old( )  // 怀旧滤镜     
-     blurH( )//高斯模糊滤镜      
-     mosaic( )//马赛克滤镜     
-     emboss( ) //浮雕滤镜
-    }
-    function bigOriginPhote(selected){
-    
-      imgSrc? ctx.drawImage(imgSrc,0,0):
-        ctx.drawImage(waveImage, 0,0);
-        imgData=ctx.getImageData(0,0,canvasWidth,canvasHeight);
-        data=imgData.data; 
-
-       
-
-       
+},
+bigOriginPhote(selected){
+         this.dataUrl? this.maxMin():
+         this.ctx.drawImage( this.waveImage, 0,0);
+         this.imgData= this.ctx.getImageData(0,0, this.canvasWidth, this.canvasHeight);
+         this.data= this.imgData.data; 
+          
         
-        switch(selectedFilter){
+        switch( this.selectedFilter){
             case 'filter1':
-            bW(data); 
-            ctx.putImageData(imgData,0,0);
+             this.bW( this.data); 
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter2':
-            revCount(data);
-            ctx.putImageData(imgData,0,0);
+             this.revCount( this.data);
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter3':
-            froCount(imgData);
-            ctx.putImageData(imgData,0,0);
+             this.froCount( this.imgData);
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter4':
-            comicCount(imgData);
-            ctx.putImageData(imgData,0,0);
+             this.comicCount( this.imgData);
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter5':
-            castingCount(imgData);
-            ctx.putImageData(imgData,0,0);
+             this.castingCount( this.imgData);
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter6':
-            brownCount(imgData);
-            ctx.putImageData(imgData,0,0);
+             this.brownCount( this.imgData);
+             this. ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter7':
-            oldCount(imgData);
-            ctx.putImageData(imgData,0,0);
+             this.oldCount( this.imgData);
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter8':
-            blurHCount(ctx,data,canvasHeight,canvasWidth);
-            ctx.putImageData(imgData,0,0);
+             this.blurHCount( this.ctx, this.data, this.canvasHeight, this.canvasWidth);
+             this.ctx.putImageData( this.imgData,0,0);
             break;
             case 'filter9':
-            mosaicCount(ctx,canvasWidth,canvasHeight,imgData);
+             this.mosaicCount( this.ctx, this.canvasWidth, this.canvasHeight, this.imgData);
             break;
             case 'filter10':
-            embossCount(data,imgData);
-            ctx.putImageData(imgData,0,0);
-            break;
-            // case 'filter01':
-            // ctx.putImageData(imgData,0,0);
-            // break;
+             this.embossCount( this.data, this.imgData);
+             this.ctx.putImageData( this.imgData,0,0);
+            break; 
         }
-     
-    }
-     function originPhoto(){
-         ctx11.drawImage(waveImage,0,0,canvas11Width,canvas11Height);
-         var originImgData=ctx11.getImageData(0,0,canvas11Width,canvas11Height);
-         ctx11.putImageData(originImgData,0,0)
+    },
+     maxMin(){
+        if(this.dataUrl){
+             this.img_width=this.dataUrl.width;
+             this.img_height=this.dataUrl.height;
+             var wtemp=this.img_width;
+             var htemp=this.img_height;
+           
+         if(this.img_width>this.canvasWidth && this.img_height>this.canvasHeight){
+            //如果宽高都大于canvas
+            this.r=this.img_width/this.canvasWidth;
+            
+            if((this.img_height/this.r)<this.canvasHeight){
+                this.r=this.img_height/this.canvasHeight
+            }
+             wtemp=Math.ceil(this.img_width/this.r);
+             htemp=Math.ceil(this.img_height/this.r);
+            this.resizeImage( wtemp, htemp);
+        }else{ // 只要一边小于，就等比放大
+           if(this.img_width<this.canvasWidth && this.img_height<this.canvasHeight){
+               //宽高都小于
+               this.r=this.canvasWidth/this.img_width;
+               if((this.img_height*this.r)<this.canvasHeight){
+                   this.r=this.canvasHeight/this.img_height
+               }
+           }else{
+               if(this.img_width<this.canvasWidth){ //宽小于
+                   this.r=this.canvasWidth/this.img_width;
+               }else{   //高小于            
+                    this.r=this.canvasHeight/this.img_height
+               }
+           }
+            wtemp=Math.ceil(this.img_width*this.r);
+            htemp=Math.ceil(this.img_height*this.r);
+            this.resizeImage( wtemp, htemp)
+           } 
+        }
 
-         if(selectedFilter == 'filter11'){
-            bigOriginPhote()
-         }
-     }
+     },
+     resizeImage(w,h){ //重置大小
+       this.ctx.drawImage(this.dataUrl,0,0,this.canvasWidth,this.canvasHeight)
+     },
+    //裁切
+    _ratio(){
+        return parseInt(window.devicePixelRatio * size);
+    },
+    cutPic(){
+
+        var cutPart=document.getElementById('cutPart')
+        var pCanvas= document.createElement('canvas');
+        var pCtx = pCanvas.getContext('2d');  
+      
+        
+        var clipperWidth=parseInt(this.clipperImgWidth/window.devicePixelRatio);
+        var clipperHeight=parseInt(this.clipperImgHeight/window.devicePixelRatio);
+        if(clipperWidth<0||clipperWidth>this.canvasWidth){ //clipperWidth判断是否超过容器
+            clipperWidth=250
+        }
+        if(clipperHeight<0||clipperHeight>this.canvasHeight){ //clipperWidth判断是否超过容器
+            clipperHeight=100
+        }
+        cutPart.setAttribute('width', clipperWidth);
+        cutPart.setAttribute('height', clipperHeight);
+        cutPart.appendChild(pCanvas);
+
+         
+        
+
+            // this.ctx.fillRect(0,0,150,150);
+            // this.ctx.translate(75,75);
+
+            //  // Create a circular clipping path
+            // this.ctx.beginPath();
+            // this.ctx.arc(0,0,60,0,Math.PI*2,true);
+            // this.ctx.clip();
+
+            //  // draw background
+            //  var lingrad = this.ctx.createLinearGradient(0,-75,0,75);
+            //  lingrad.addColorStop(0, '#232256');
+            //  lingrad.addColorStop(1, '#143778');
+  
+            //  this.ctx.fillStyle = lingrad;
+            //  this.ctx.fillRect(-75,-75,150,150);
+
+            //  // draw stars
+            //  for (var j=1;j<50;j++){
+            //  this.ctx.save();
+            //  this.ctx.fillStyle = '#fff';
+            //  this.ctx.translate(75-Math.floor(Math.random()*150),
+            //       75-Math.floor(Math.random()*150));
+            //  this.drawStar(this.ctx,Math.floor(Math.random()*4)+2);
+            //  this.ctx.restore();
+            // }
+         },
+         drawStar(ctx,r){
+             ctx.save();
+             ctx.beginPath()
+             ctx.moveTo(r,0);
+            for (var i=0;i<9;i++){
+              ctx.rotate(Math.PI/5);
+              if(i%2 == 0) {
+              ctx.lineTo((r/0.525731)*0.200811,0);
+             } else {
+              ctx.lineTo(r,0);
+          }
+      }
+           ctx.closePath();
+           ctx.fill();
+           ctx.restore();
+         },
     
-    function blackWhite(){
-            ctx1.drawImage(waveImage,0,0,canvas1Width,canvas1Height);
-            imgData1=ctx1.getImageData(0,0,canvas1Width,canvas1Height); 
-              var data1=imgData1.data;
-              bW(data1)
-            ctx1.putImageData(imgData1,0,0)
-    }
-    function bW(data){
+
+   originPhoto(){
+         this.ctx11.drawImage(this.waveImage,0,0,this.canvas11Width,this.canvas11Height);
+         var originImgData=this.ctx11.getImageData(0,0,this.canvas11Width,this.canvas11Height);
+         this.ctx11.putImageData(originImgData,0,0)
+         if(this.selectedFilter == 'filter11'){
+            this.bigOriginPhote()
+         }
+     },
+    blackWhite(){
+            this.ctx1.drawImage(this.waveImage,0,0,this.canvas1Width,this.canvas1Height);
+            this.imgData1=this.ctx1.getImageData(0,0,this.canvas1Width,this.canvas1Height); 
+            var data1=this.imgData1.data;
+            this.bW(data1)
+            this.ctx1.putImageData(this.imgData1,0,0)
+    },
+    bW(data){
         for(var i = 0; i < data.length; i += 4) {
             var avg1 = (data[i] + data[i+1] + data[i+2]) / 3;
             data[i] = data[i+1] = data[i+2] = avg1 >= 100 ? 255 : 0;
         }
-    }
-    function reverse(){
-             ctx2.drawImage(waveImage,0,0,canvas2Width,canvas2Height);
-            imgData2=ctx2.getImageData(0,0,canvas2Width,canvas2Height);
-            var data2=imgData2.data;
-            revCount(data2)
-          ctx2.putImageData(imgData2,0,0)
-    }
-    function revCount(data){
+    },
+    reverse(){
+            this.ctx2.drawImage(this.waveImage,0,0,this.canvas2Width,this.canvas2Height);
+            this.imgData2=this.ctx2.getImageData(0,0,this.canvas2Width,this.canvas2Height);
+            var data2=this.imgData2.data;
+            this.revCount(data2)
+           this.ctx2.putImageData(this.imgData2,0,0)
+    },
+     revCount(data){
         for(var i = 0; i < data.length; i+= 4) {
                data[i] = 255 - data[i];
                data[i + 1] = 255 - data[i + 1];
                data[i + 2] = 255 - data[i + 2];
           }
-    }
-    function frozen(){
-       ctx3.drawImage(waveImage,0,0,canvas3Width,canvas3Height);
-       imgData3=ctx3.getImageData(0,0,canvas3Width,canvas3Height);        
-          froCount(imgData3)
-         ctx3.putImageData(imgData3,0,0)
-    }
-    function froCount(imgData){
+    },
+     frozen(){
+       this.ctx3.drawImage(this.waveImage,0,0,this.canvas3Width,this.canvas3Height);
+       this.imgData3=this.ctx3.getImageData(0,0,this.canvas3Width,this.canvas3Height);        
+        this.froCount(this.imgData3)
+        this.ctx3.putImageData(this.imgData3,0,0)
+    },
+     froCount(imgData){
          for(var i = 0; i < imgData.height * imgData.width; i++) {
            var r = imgData.data[i*4],
                g = imgData.data[i*4+1],
@@ -361,17 +521,17 @@ function init (callback, filter) {
            var rgbArr = [newR, newG, newB].map((e) => {
                 return e < 0 ? 0 : e > 255 ? 255 : e;
          });
-    [imgData.data[i*4], imgData.data[i*4+1], imgData.data[i*4+2]] = rgbArr;
+     [imgData.data[i*4], imgData.data[i*4+1], imgData.data[i*4+2]] = rgbArr;
          }
-    }
-    function comic(){
-       ctx4.drawImage(waveImage,0,0,canvas4Width,canvas4Height);
-       imgData4=ctx4.getImageData(0,0,canvas4Width,canvas4Height);
-       comicCount(imgData4)
-
-      ctx4.putImageData(imgData4,0,0)
-    }
-    function comicCount(imgData){
+    },
+    
+     comic(){
+       this.ctx4.drawImage(this.waveImage,0,0,this.canvas4Width,this.canvas4Height);
+       this.imgData4=this.ctx4.getImageData(0,0,this.canvas4Width,this.canvas4Height);
+       this.comicCount(this.imgData4)
+       this.ctx4.putImageData(this.imgData4,0,0)
+    },
+   comicCount(imgData){
     for(var i = 0; i < imgData.height * imgData.width; i++) {
     var r = imgData.data[i*4],
         g = imgData.data[i*4+1],
@@ -383,15 +543,14 @@ function init (callback, filter) {
     var rgbArr = [newR, newG, newB];
     [imgData.data[i*4], imgData.data[i*4+1], imgData.data[i*4+2]] = rgbArr;
   }
-    }
-
-    function casting(){
-      ctx5.drawImage(waveImage,0,0,canvas5Width,canvas5Height);
-      imgData5=ctx5.getImageData(0,0,canvas5Width,canvas5Height);       
-      castingCount(imgData5)
-     ctx5.putImageData(imgData5,0,0)
-    }
-    function castingCount(imgData){
+    },
+    casting(){
+      this.ctx5.drawImage(this.waveImage,0,0,this.canvas5Width,this.canvas5Height);
+      this.imgData5=this.ctx5.getImageData(0,0,this.canvas5Width,this.canvas5Height);       
+      this.castingCount(this.imgData5)
+      this.ctx5.putImageData(this.imgData5,0,0)
+    },
+   castingCount(imgData){
        for(var i = 0; i < imgData.height * imgData.width; i++) {
        var r = imgData.data[i*4],
         g = imgData.data[i*4+1],
@@ -405,16 +564,15 @@ function init (callback, filter) {
     });
        [imgData.data[i*4], imgData.data[i*4+1], imgData.data[i*4+2]] = rgbArr;
     }
-    }
+    },
 
-    function brown(){
-     ctx6.drawImage(waveImage,0,0,canvas6Width,canvas6Height);
-    imgData6=ctx6.getImageData(0,0,canvas6Width,canvas6Height);
-    brownCount(imgData6) 
-    ctx6.putImageData(imgData6,0,0)
-    }
-
-    function brownCount(imgData){
+    brown(){
+     this.ctx6.drawImage(this.waveImage,0,0,this.canvas6Width,this.canvas6Height);
+     this.imgData6=this.ctx6.getImageData(0,0,this.canvas6Width,this.canvas6Height);
+     this.brownCount(this.imgData6) 
+     this.ctx6.putImageData(this.imgData6,0,0)
+    },
+    brownCount(imgData){
       for (var i = 0; i < imgData.height * imgData.width; i++) {
     var r = imgData.data[i * 4],
         g = imgData.data[i * 4 + 1],
@@ -426,15 +584,15 @@ function init (callback, filter) {
     var rgbArr = [newR, newG, newB];
     [imgData.data[i * 4], imgData.data[i * 4 + 1], imgData.data[i * 4 + 2]] = rgbArr;
   }
-    }
+    },
 
-    function old(){
-        ctx7.drawImage(waveImage,0,0,canvas7Width,canvas7Height);
-       imgData7=ctx7.getImageData(0,0,canvas7Width,canvas7Height);  
-     oldCount(imgData7)
-   ctx7.putImageData(imgData7,0,0)
-    }
-    function oldCount(imgData){
+   old(){
+       this.ctx7.drawImage(this.waveImage,0,0,this.canvas7Width,this.canvas7Height);
+       this.imgData7=this.ctx7.getImageData(0,0,this.canvas7Width,this.canvas7Height);  
+       this.oldCount(this.imgData7)
+       this.ctx7.putImageData(this.imgData7,0,0)
+    },
+     oldCount(imgData){
       for(var i = 0; i < imgData.height * imgData.width; i++) {
     var r = imgData.data[i*4],
         g = imgData.data[i*4+1],
@@ -448,16 +606,16 @@ function init (callback, filter) {
     });
     [imgData.data[i*4],imgData.data[i*4+1],imgData.data[i*4+2]] = rgbArr;
    }
-    }
-////////////
- function blurH(){
-     ctx8.drawImage(waveImage,0,0,canvas8Width,canvas8Height);
-       imgData8=ctx8.getImageData(0,0,canvas8Width,canvas8Height);
-       var data8=imgData8.data
-       blurHCount(ctx8,data8,canvas8Height,canvas8Width)
-       ctx8.putImageData(imgData8,0,0)
-}
- function blurHCount(ctx,data,canvasHeight,canvasWidth){
+    },
+ 
+ blurH(){
+     this.ctx8.drawImage(this.waveImage,0,0,this.canvas8Width,this.canvas8Height);
+     this.imgData8=this.ctx8.getImageData(0,0,this.canvas8Width,this.canvas8Height);
+     var data8=this.imgData8.data
+     this.blurHCount(this.ctx8,data8,this.canvas8Height,this.canvas8Width)
+     this.ctx8.putImageData(this.imgData8,0,0)
+},
+ blurHCount(ctx,data,canvasHeight,canvasWidth){
        var tmpImageData=ctx.getImageData(0,0,canvasWidth,canvasHeight)
        var tmpPixelData=tmpImageData.data;
 
@@ -482,19 +640,15 @@ function init (callback, filter) {
                data[p*4+2]=totalB/totalNum
            }
        }
- }
+ },
+  mosaic(){
+   this.ctx9.drawImage(this.waveImage,0,0,this.canvas9Width,this.canvas9Height);
+   this.imgData9=this.ctx9.getImageData(0,0,this.canvas9Height,this.canvas9Width);
+   var data9=this.imgData9.data;
+   this.mosaicCount(this.ctx9,this.canvas9Width,this.canvas9Height,this.imgData9)
+},
 
-
-function mosaic(){
-   ctx9.drawImage(waveImage,0,0,canvas9Width,canvas9Height);
-   imgData9=ctx9.getImageData(0,0,canvas9Height,canvas9Width);
-   var data9=imgData9.data;
-   mosaicCount(ctx9,canvas9Width,canvas9Height,imgData9)
-  
-   //ctx9.putImageData(newImg,0,0)
-}
-
-function mosaicCount(ctx,canvasWidth,canvasHeight,imgData){
+ mosaicCount(ctx,canvasWidth,canvasHeight,imgData){
  //新ImgData对象
    var newImg=ctx.createImageData(canvasWidth,canvasHeight)
    //作为参考的像素
@@ -510,28 +664,28 @@ function mosaicCount(ctx,canvasWidth,canvasHeight,imgData){
    for(var i=0;i<stepH;i++){
       for(var j=0;j<stepW;j++){
           //获取小方格的随机颜色和位置
-        var color=getXY(imgData,j*size+Math.floor(Math.random()*size),i*size+Math.floor(Math.random()*size));
+        var color=this.getXY(imgData,j*size+Math.floor(Math.random()*size),i*size+Math.floor(Math.random()*size));
         for(var k=0;k<size;k++){
             for(var l=0;l<size;l++){
                 //设置颜色
-                setXY(newImg,j*size+l,i*size+k,color);
+                this.setXY(newImg,j*size+l,i*size+k,color);
             }
         }
       }
    }
-    ctx9.putImageData(newImg,0,0)
-}
+   ctx.putImageData(newImg,0,0)
+},
 
 // 浮雕滤镜
-function emboss(){
+  emboss(){
     var imageData,data;
-    ctx10.drawImage(waveImage,0,0,canvas10Width,canvas10Height);
-    imageData=ctx10.getImageData(0,0,canvas10Width,canvas10Height);
+    this.ctx10.drawImage(this.waveImage,0,0,this.canvas10Width,this.canvas10Height);
+    imageData=this.ctx10.getImageData(0,0,this.canvas10Width,this.canvas10Height);
     data=imageData.data;
-   embossCount(data,imageData)
-    ctx10.putImageData(imageData,0,0)
-}
-function embossCount(data,imageData){
+    this.embossCount(data,imageData)
+    this.ctx10.putImageData(imageData,0,0)
+},
+ embossCount(data,imageData){
  var length,width;
  length=data.length;
     width=imageData.width;
@@ -554,11 +708,9 @@ function embossCount(data,imageData){
             }
         }
     }
+},
 
-
-}
-
-function getXY(obj,x,y){
+ getXY(obj,x,y){
     var w=obj.width;
     var h=obj.height;
     var d=obj.data;
@@ -568,9 +720,8 @@ function getXY(obj,x,y){
     color[2]=obj.data[4*(y*w+x)+2];
     color[3]=obj.data[4*(y*w+x)+3];
     return color;
-}
-
-function setXY(obj,x,y,color){
+},
+ setXY(obj,x,y,color){
     var w=obj.width;
     var h=obj.height;
     var d=obj.data;
@@ -578,63 +729,81 @@ function setXY(obj,x,y,color){
     obj.data[4*(y*w+x)+1]=color[1];
     obj.data[4*(y*w+x)+2]=color[2];
     obj.data[4*(y*w+x)+3]=color[3];
-}
+},
 
 //上传
-function changePic(){
-    originalPic.onclick=function(){ 
-        doInput()
+ changePic(){ 
+     var _this=this
+    this.originalPic.onclick=function(){ 
+     _this.doInput()
     }
-}
- function doInput(){
+},
+ doInput(){
         var inputObj=document.createElement('input')
-        inputObj.addEventListener('change',readFile,false);
+        inputObj.addEventListener('change',this.readFile,false);
         inputObj.type='file';
         inputObj.accept='image/*';
         inputObj.click(); 
        var myInput=inputObj
-      }
-    function readFile(e){          
-          var file=e.target.files[0] 
+     
+      },
+  readFile(e){     
+         var file=e.target.files[0]
+          this.imgPreview(file)                
+      },
+ imgPreview(file){
+         let _this=this
           if(!/image\/\w+/.test(file.type)){
               alert('请确保文件为图像类型');
               return false;
           }
           var reader=new FileReader();
-           reader.readAsDataURL(file);
-         
-           reader.onload=function(e){
-             drawToCanvas(e.target.result)   
-          }                    
-      }
-      
-     function drawToCanvas(photoAd){ 
+           reader.readAsDataURL(file); 
+          reader.onload=e=>           
+           {
+             this.dataUrl=e.target.result; 
+              this.drawToCanvas(this.dataUrl)   
+          }
+ },     
+  drawToCanvas(photoAd){ 
          var img=new Image;
          img.src=photoAd;
-         img.onload=function(){
-             imgSrc=img
-             clearRect()
+         img.onload=()=>{
+             this.dataUrl=img
+             this.$emit('listenToChildEvent',this.dataUrl)
+             this.clearRect()
          }
-       }
+       },
 
-     // 先清空再重置  
-    function clearRect(){
-       ctx.clearRect(0,0,canvasWidth,canvasHeight); 
-       bigOriginPhote()
-    }   
-
-    function start (el) {
-        if (!ctx) return init(start, el);
-        needAnimate = true;
+    // 先清空再重置  
+  clearRect(){
+       this.ctx.clearRect(0,0,this.canvasWidth,this.canvasHeight); 
+       this.bigOriginPhote()
+    },
+   start(){
+       if(!this.ctx) return this.init(this.start );
+         this.needAnimate = true;
         setTimeout(function () {
-            if(needAnimate)
-             filter();
-            //animate();
+            if(this.needAnimate)
+            this.filter(); 
         }, 0);
+   },
+   //放大
+   handleScaleMax(){
+    
+
+   }
+
+    },
+    mounted(){
+     var ul=document.querySelector("ul");
+     var list=document.getElementsByTagName('li');
+     this.foo(list);
+     this.start(); 
+     this.filter();
+     
     }
-    function stop () {
-        needAnimate = false;
-    }  
+}      
 </script>
  
 
@@ -643,6 +812,7 @@ function changePic(){
  #filter{ text-align: center;height:100%;cursor: pointer;}
  #filter ul{justify-content: center;align-items:center;}
 #filter ul li{margin:0 5px;cursor: pointer;}
+#cutPart{border:1px solid black;}
 </style>
 
 
