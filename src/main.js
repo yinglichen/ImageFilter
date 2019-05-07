@@ -8,7 +8,9 @@ import filters from '@/components/index.js'
 Vue.use(filters)
 import ElementUI from 'element-ui'
 import '../node_modules/element-ui/lib/theme-chalk/index.css'
+import html2canvas from 'html2canvas'
 Vue.use(ElementUI)
+Vue.use(html2canvas)
 
 Vue.config.productionTip = false
 
