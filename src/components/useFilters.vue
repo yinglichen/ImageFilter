@@ -3,10 +3,10 @@
        <div>
            <button @click='closeFilter'>{{onOff}}</button>
            <button @click="downLoad">{{downLoadName}}</button>
-           <button @click="upload">上传</button>
-           <button @click="cutPic">裁切</button>
-           <button @click="handleScaleMax">放大</button>
-           <button @click="handleScaleMin">缩小</button>
+           <button @click="upload">{{updataName}}</button>
+           <!-- <button @click="cutPic">{{cutName}}</button>
+           <button @click="handleScaleMax">{{scaleName}}</button>
+           <button @click="handleScaleMin">缩小</button> -->
        </div>
        <filters v-if='close==false' v-on:listenToChildEvent='savePic' ref="filter" ></filters>
     </div>
@@ -22,7 +22,10 @@ export default {
             picName:null,
             ctx:null,
             onOff:'关闭',
-            downLoadName:'保存'
+            downLoadName:'保存/下载',
+            updataName:'上传图片',
+            // cutName:'裁切图片',
+            // scaleName:'放大'
         }
     },
     methods:{
@@ -50,17 +53,17 @@ export default {
              link.dispatchEvent(event);
         },
         //裁切图片
-       cutPic(){
-            this.$refs.filter.cutPic();       
-     },
+    //    cutPic(){
+    //         this.$refs.filter.cutPic();       
+    //  },
      //放大
-     handleScaleMax(){
-          this.$refs.filter.handleScaleMax();
-     },
+    //  handleScaleMax(){
+    //       this.$refs.filter.handleScaleMax();
+    //  },
      // 缩小
-     handleScaleMin(){
-         this.$refs.filter.handleScaleMin();
-     },
+    //  handleScaleMin(){
+    //      this.$refs.filter.handleScaleMin();
+    //  },
     }
 }
 </script>

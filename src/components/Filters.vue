@@ -2,9 +2,13 @@
   <div id="filterPage">
     <div id="filter" v-myfilter>
         <!--  -->
+        <!-- <div id='cutPic' style='border:1px solid black;position:absolute;'>
+         <canvas ref='pCanvas'></canvas>
+        </div> -->
         
          <!-- @mousedown='cutPic' @mouseup="finishedCut" -->
-      <div id="originalPic" ref='originPic' ></div>
+      <div id="originalPic" ref='originPic'
+      @mousedown='handleMouseDown' @mouseup="finishedCut" ></div>
       
       <div id="select_filter">
         <ul style="display:flex;">
@@ -52,6 +56,7 @@ import { setTimeout } from "timers";
 import { endianness } from "os";
 import { constants } from "fs";
 import html2canvas from 'html2canvas';
+import { parse } from 'querystring';
 export default {
   install(Vue) {
     Vue.directive("myfilter", {
@@ -143,28 +148,26 @@ export default {
       img_width: 0,
       img_height: 0,
       // 裁切
-      cutPhotoCtx:null,
-      cutPhotoCanvas:null,
       x: 0, //点击canvas x 鼠标地址
       y: 0, //点击canvas y 鼠标地址
-      xV: 0, //鼠标移动 x距离
-      yV: 0, //鼠标移动 y距离
-      nX: 0, //原始坐标点 图像x
-      nY: 0, //原始坐标点 图像y
-      scale: 1.5, //放大比例
-    
+      pCtx:null,
+      pCanvas:null,
+      cWidth:0,
+      cHeight:0,
+      cFlag:false,
+      options:{
+        minContainerHeight:canvasHeight,
+        minContainerWidth:canvasWidth,
+        aspectRation:1/1,  // 裁剪框比例
+        viewMode:1, //显示
+        guides:false, //裁剪框虚线
+        dragMode:'move',
+        background:true, // 容器是否显示网格背景
+        movable:true, //是否移动照片
+        cropBoxMovable:false, //允许拖动裁剪框
+        cropBoxResizable:false, //允许拖动改变裁剪框大小
+      }
     };
-  },
-  props: {
-    img: String,
-    clipperImgWidth: {
-      type: Number,
-      default: 500
-    },
-    clipperImgHeight: {
-      type: Number,
-      default: 200
-    }
   },
   methods: {
     filter() {
@@ -423,44 +426,47 @@ export default {
      },
      
     //裁切
-    cutPic(event) {
-       let self=this
-       let ref=this.$refs.originPic //截图区域
+    cutPic( ) {
+      this.cFlag=!this.cFlag
+    },
 
-        var cutPhoto=document.getElementById('cutPhoto');
-        var cutPhotoCanvas=document.createElement('canvas');
-        this.cutPhotoCtx=cutPhotoCanvas.getContext('2d');
-        var cutPhotoCanvasW=600;
-        var cutPhotoCanvasH=600;
-        cutPhotoCanvas.setAttribute("width", cutPhotoCanvasW);
-        cutPhotoCanvas.setAttribute("height",cutPhotoCanvasH);
-        cutPhoto.appendChild(cutPhotoCanvas);
-
-       html2canvas(ref,{
-        //   backgroundColor:'null'
-       }).then((cutPhotoCanvas )=>{
-        var dataURL= cutPhotoCanvas.toDataURL('image/png')
-         self.dataURL=dataURL
-          console.log(self.dataURL,'DATAURL')
-           self.cutPhotoCtx.drawImage(self.dataURL, 0, 0);
+    handleMouseDown(event){
+      if(this.cFlag){
+        this.pCanvas=this.$refs.pCanvas;
+        this.pCtx=this.pCanvas.getContext('2d');
          
-       })
-      
-      // this.ownMouse()
+        this.cWidth=event.offsetX;
+        this.cHeight=event.offsetY;          
+        this.ownMouse(this.cWidth,this.cHeight)  
+      }else{
+        return
+      }
     },
-    ownMouse( ){  
-          this.cutPhotoCtx.drawImage(this.dataURL, 0, 0);
+    //鼠标移动绘制
+    ownMouse(x,y ){  
+       //边界判断
+        if(x<0 && y<0){
+          return 
+        }
+       if((x>0 && x<this.canvasWidth) && (y>0 && y<this.canvasHeight)){ // 宽高没有超出边界
+          this.x=x
+          this.y=y
+       }else if (x>this.canvasWidth){ // 宽超出边界
+          this.x=this.canvasWidth
+       }else if (y>this.canvasHeight){ // 高超出边界
+          this.y=this.canvasHeight
+       } 
     },
-    // finishedCut(){
-    //    this.cutPhotoCtx.drawImage(this.dataURL, 0, 0);
-    // },
-    // clearRectCut(){
-    //     this.cutPhotoCtx.fillRect(0, 0,this.x, this.y);
-    //     this.cutPhotoCtx.canvas.width=0
-    //     this.cutPhotoCtx.canvas.height=0;
-    //     this.ownMouse(event)
-    // },
-      
+    finishedCut(){
+      let cutPic=document.getElementById('cutPic')
+      this.pCanvas.setAttribute("width", this.x);
+      this.pCanvas.setAttribute("height", this.y);
+      this.pCtx.drawImage(this.waveImage,0,0,this.x,this.y)
+      cutPic.appendChild(this.pCanvas);
+    },
+
+
+
     originPhoto() {
       this.ctx11.drawImage(
         this.waveImage,
@@ -876,8 +882,9 @@ export default {
     },
 
     //上传
+    // 点击canvas/图片上传，不需要点击按钮
    // changePic() {
-  //  var _this = this;
+   //  var _this = this;
      // this.originalPic.onclick = function() {
    //     _this.doInput();
     // };
@@ -929,8 +936,12 @@ export default {
         if (this.needAnimate) this.filter();
       }, 0);
     },
+
     //放大
-    handleScaleMax() {}
+    handleScaleMax(flag) {
+      
+    },
+
   },
   mounted() {
     var ul = document.querySelector("ul");
@@ -938,6 +949,17 @@ export default {
     this.foo(list);
     this.start();
     this.filter();
+     
+  },
+  computed:{
+      // width(){
+      //   const{clip}=this
+      //   return parseFloat(clip.width.replace('px',''))
+      // },
+      // height(){
+      //   const{clip}=this
+      //   return parseFloat(clip.height.replace('px',''))
+      // }
   }
 };
 </script>
